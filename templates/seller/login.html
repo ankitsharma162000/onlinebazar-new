@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Seller Login — OnlineBazar{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card shadow-lg">
+        <div class="card-header bg-success text-white text-center py-3">
+          <h4 class="mb-0"><i class="fas fa-store me-2"></i>Seller Login</h4>
+          <small>E-Commerce | MCA Project — Ankit Sharma (34) & Niraj Kumar (8)</small>
+        </div>
+        <div class="card-body p-4">
+          <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Email Address</label>
+              <input type="email" name="email" class="form-control" placeholder="Seller email" required/>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Password</label>
+              <input type="password" name="password" class="form-control" placeholder="Password" required/>
+            </div>
+            <button type="submit" class="btn btn-success w-100 fw-bold btn-lg">Login as Seller</button>
+          </form>
+          <hr/>
+          <p class="text-center mb-1">New seller? <a href="/seller/register/" class="fw-bold text-success">Register Here</a></p>
+          <p class="text-center"><a href="/user/login/" class="text-muted small">User Login</a> | <a href="/superadmin/login/" class="text-muted small">SuperAdmin</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

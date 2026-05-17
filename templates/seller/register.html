@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Seller Registration — OnlineBazar{% endblock %}
+{% block content %}
+<div class="container mt-4 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7">
+      <div class="card shadow-lg">
+        <div class="card-header bg-success text-white text-center py-3">
+          <h4 class="mb-0"><i class="fas fa-store me-2"></i>Create Seller Account</h4>
+          <small>E-Commerce | MCA Project — Ankit Sharma (34) & Niraj Kumar (8)</small>
+        </div>
+        <div class="card-body p-4">
+          <form method="POST">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Full Name *</label>
+                <input type="text" name="name" class="form-control" value="{{ data.name|default:'' }}" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Email Address *</label>
+                <input type="email" name="email" class="form-control" value="{{ data.email|default:'' }}" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Phone Number *</label>
+                <input type="text" name="phone_number" class="form-control" maxlength="10" value="{{ data.phone_number|default:'' }}" placeholder="10-digit" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Password *</label>
+                <input type="password" name="password" class="form-control" minlength="6" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Confirm Password *</label>
+                <input type="password" name="confirm_password" class="form-control" minlength="6" required/>
+              </div>
+              <div class="col-md-12"><hr/><h5 class="fw-bold text-success"><i class="fas fa-map-marker-alt me-2"></i>Business Address</h5></div>
+              <div class="col-md-12">
+                <label class="form-label fw-semibold">Address Line *</label>
+                <input type="text" name="address_line" class="form-control" value="{{ data.address_line|default:'' }}" required/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">District *</label>
+                <input type="text" name="district" class="form-control" value="{{ data.district|default:'' }}" required/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">State *</label>
+                <input type="text" name="state" class="form-control" value="{{ data.state|default:'' }}" required/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Pincode *</label>
+                <input type="text" name="pincode" class="form-control" maxlength="6" value="{{ data.pincode|default:'' }}" required/>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success w-100 fw-bold btn-lg mt-4">Create Seller Account</button>
+          </form>
+          <p class="text-center mt-3">Already registered? <a href="/seller/login/" class="fw-bold text-success">Login</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
