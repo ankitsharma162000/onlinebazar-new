@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
@@ -51,12 +52,24 @@ def home(request):
         except Exception:
             pass
 
+    # Pagination — 12 products per page
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
     return render(request, 'store/home.html', {
-        'products': products, 'recommended': recommended,
+        'products': page_obj, 'recommended': recommended,
         'featured': featured, 'query': query,
         'selected_category': category,
         'is_member': is_member,
         'all_categories': CATEGORY_CHOICES,
+        'page_obj': page_obj,
+        'paginator': paginator,
     })
 
 

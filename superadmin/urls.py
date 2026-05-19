@@ -26,4 +26,5 @@ urlpatterns = [
     path('chatbot/answer/', views.chatbot_answer, name='chatbot_answer'),
     path('chatbot/knowledge/add/', views.chatbot_add_knowledge, name='chatbot_add_knowledge'),
     path('chatbot/knowledge/delete/<uuid:kb_id>/', views.chatbot_delete_knowledge, name='chatbot_delete_knowledge'),
+    path('seller-activity/', views.seller_activity_log, name='seller_activity_log'),
 ]

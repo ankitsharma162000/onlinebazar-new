@@ -582,3 +582,29 @@ def return_requests(request):
             ('rejected', '❌ Rejected'),
         ],
     })
+
+
+# ─── SUPERADMIN SELLER ACTIVITY LOG ──────────────────────────────────────────
+
+def seller_activity_log(request):
+    from store.models import SellerActivity, SellerDiscount
+    from seller.models import Seller
+    activities = SellerActivity.objects.select_related('seller', 'product').order_by('-created_at')
+    # Filter by seller if requested
+    seller_filter = request.GET.get('seller_id')
+    if seller_filter:
+        activities = activities.filter(seller__seller_id=seller_filter)
+    action_filter = request.GET.get('action')
+    if action_filter:
+        activities = activities.filter(action=action_filter)
+    sellers = Seller.objects.all()
+    # Summary counts
+    from django.db.models import Count
+    summary = SellerActivity.objects.values('action').annotate(count=Count('id')).order_by('-count')
+    return render(request, 'superadmin/seller_activity_log.html', {
+        'activities': activities,
+        'sellers': sellers,
+        'seller_filter': seller_filter,
+        'action_filter': action_filter,
+        'summary': summary,
+    })

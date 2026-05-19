@@ -386,3 +386,164 @@ def mark_delivered(request, req_id):
         return JsonResponse({'success': True, 'message': 'Order marked as delivered!'})
     except SellerOrderRequest.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Request not found.'})
+
+
+# ─── SELLER DISCOUNT ──────────────────────────────────────────────────────────
+
+def seller_discounts(request):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    from store.models import SellerDiscount, SellerActivity
+    discounts = SellerDiscount.objects.filter(seller=seller).select_related('product')
+    products  = Product.objects.filter(seller=seller, is_active=True)
+    return render(request, 'seller/discounts.html', {
+        'seller': seller, 'discounts': discounts, 'products': products
+    })
+
+
+def seller_discount_add(request):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    if request.method == 'POST':
+        from store.models import SellerDiscount, SellerActivity
+        product_id     = request.POST.get('product_id')
+        discount_type  = request.POST.get('discount_type')
+        value          = request.POST.get('value')
+        start_date     = request.POST.get('start_date') or None
+        end_date       = request.POST.get('end_date') or None
+        product = get_object_or_404(Product, product_id=product_id, seller=seller)
+        SellerDiscount.objects.create(
+            seller=seller, product=product,
+            discount_type=discount_type, value=value,
+            start_date=start_date, end_date=end_date
+        )
+        SellerActivity.objects.create(
+            seller=seller, product=product, action='discount_added',
+            details=f"Added {discount_type} discount of {value} on '{product.product_name}'"
+        )
+        messages.success(request, f"Discount added on {product.product_name}!")
+    return redirect('seller_discounts')
+
+
+def seller_discount_toggle(request, discount_id):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    from store.models import SellerDiscount, SellerActivity
+    disc = get_object_or_404(SellerDiscount, id=discount_id, seller=seller)
+    disc.is_active = not disc.is_active
+    disc.save()
+    action = 'discount_added' if disc.is_active else 'discount_removed'
+    SellerActivity.objects.create(
+        seller=seller, product=disc.product, action=action,
+        details=f"{'Activated' if disc.is_active else 'Deactivated'} discount on '{disc.product.product_name}'"
+    )
+    messages.success(request, f"Discount {'activated' if disc.is_active else 'deactivated'}.")
+    return redirect('seller_discounts')
+
+
+def seller_discount_delete(request, discount_id):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    from store.models import SellerDiscount, SellerActivity
+    disc = get_object_or_404(SellerDiscount, id=discount_id, seller=seller)
+    SellerActivity.objects.create(
+        seller=seller, product=disc.product, action='discount_removed',
+        details=f"Deleted discount on '{disc.product.product_name}'"
+    )
+    disc.delete()
+    messages.success(request, "Discount deleted.")
+    return redirect('seller_discounts')
+
+
+# ─── SELLER DYNAMIC PRICING ───────────────────────────────────────────────────
+
+def seller_dynamic_pricing(request):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    from ml.dynamic_pricing import get_dynamic_price
+    products = Product.objects.filter(seller=seller, is_active=True)
+    recommendations = []
+    for p in products:
+        try:
+            rec = get_dynamic_price(p)
+            if rec:
+                recommendations.append({'product': p, 'rec': rec})
+        except Exception:
+            pass
+    return render(request, 'seller/dynamic_pricing.html', {
+        'seller': seller, 'recommendations': recommendations
+    })
+
+
+def seller_apply_price(request, product_id):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    product = get_object_or_404(Product, product_id=product_id, seller=seller)
+    if request.method == 'POST':
+        from store.models import SellerActivity
+        new_price  = request.POST.get('new_price')
+        old_price  = product.price
+        product.price = new_price
+        product.save(update_fields=['price'])
+        SellerActivity.objects.create(
+            seller=seller, product=product, action='price_changed',
+            details=f"Price changed from Rs.{old_price} to Rs.{new_price} on '{product.product_name}'"
+        )
+        messages.success(request, f"Price updated to Rs.{new_price} for {product.product_name}!")
+    return redirect('seller_dynamic_pricing')
+
+
+# ─── SELLER RETURN REQUESTS ───────────────────────────────────────────────────
+
+def seller_return_requests(request):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    from store.models import ReturnRequest
+    # Only show returns for this seller's products
+    returns = ReturnRequest.objects.filter(
+        order_item__product__seller=seller
+    ).select_related('user', 'order', 'order_item__product').order_by('-created_at')
+    return render(request, 'seller/return_requests.html', {
+        'seller': seller, 'returns': returns
+    })
+
+
+def seller_return_action(request, return_id):
+    seller_id = request.session.get('seller_id')
+    if not seller_id: return redirect('seller_login')
+    seller = get_object_or_404(Seller, seller_id=seller_id)
+    from store.models import ReturnRequest, SellerActivity
+    ret = get_object_or_404(ReturnRequest, id=return_id, order_item__product__seller=seller)
+    if request.method == 'POST':
+        action      = request.POST.get('action')
+        seller_note = request.POST.get('seller_note', '')
+        if action == 'approve':
+            ret.status      = 'approved'
+            ret.seller_note = seller_note
+            ret.save()
+            # Restore stock
+            product = ret.order_item.product
+            product.stock_quantity += ret.order_item.quantity
+            product.save(update_fields=['stock_quantity'])
+            SellerActivity.objects.create(
+                seller=seller, product=product, action='return_approved',
+                details=f"Approved return for Order #{str(ret.order.order_id)[:8].upper()} — {product.product_name}. Note: {seller_note}"
+            )
+            messages.success(request, "Return approved and stock restored.")
+        elif action == 'reject':
+            ret.status      = 'rejected'
+            ret.seller_note = seller_note
+            ret.save()
+            SellerActivity.objects.create(
+                seller=seller, product=ret.order_item.product, action='return_rejected',
+                details=f"Rejected return for Order #{str(ret.order.order_id)[:8].upper()} — {ret.order_item.product.product_name}. Reason: {seller_note}"
+            )
+            messages.success(request, "Return rejected.")
+    return redirect('seller_return_requests')

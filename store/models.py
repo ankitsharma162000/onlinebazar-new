@@ -236,6 +236,7 @@ class ReturnRequest(models.Model):
     product_image= models.ImageField(upload_to='returns/', null=True, blank=True)
     status       = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
     admin_note   = models.TextField(blank=True, null=True)
+    seller_note  = models.TextField(blank=True, null=True)
     refund_amount= models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
     updated_at   = models.DateTimeField(auto_now=True)
@@ -256,3 +257,58 @@ class ReturnRequest(models.Model):
             days = (timezone.now() - self.order.order_date).days
             return days <= 7
         return False
+
+
+class SellerDiscount(models.Model):
+    """Seller-level product discount — seller applies to own products"""
+    DISCOUNT_TYPE = [
+        ('flat',    'Flat Amount (Rs.)'),
+        ('percent', 'Percentage (%)'),
+    ]
+    id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    seller       = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='seller_discounts')
+    product      = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='seller_discounts')
+    discount_type= models.CharField(max_length=10, choices=DISCOUNT_TYPE)
+    value        = models.DecimalField(max_digits=8, decimal_places=2)
+    is_active    = models.BooleanField(default=True)
+    start_date   = models.DateField(null=True, blank=True)
+    end_date     = models.DateField(null=True, blank=True)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    def discounted_price(self):
+        p = self.product.price
+        if self.discount_type == 'flat':
+            return max(0, p - self.value)
+        else:
+            return round(p * (1 - self.value / 100), 2)
+
+    def __str__(self):
+        return f"{self.product.product_name} — {self.value}{'%' if self.discount_type=='percent' else ' Rs.'} off"
+
+    class Meta:
+        db_table = 'store_sellerdiscount'
+        ordering = ['-created_at']
+
+
+class SellerActivity(models.Model):
+    """Audit log — tracks all seller actions for SuperAdmin visibility"""
+    ACTION_CHOICES = [
+        ('discount_added',    'Discount Added'),
+        ('discount_removed',  'Discount Removed'),
+        ('price_changed',     'Price Changed'),
+        ('return_approved',   'Return Approved'),
+        ('return_rejected',   'Return Rejected'),
+    ]
+    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    seller     = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='activities')
+    action     = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    product    = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    details    = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.seller.name} — {self.action} at {self.created_at:%d %b %Y %H:%M}"
+
+    class Meta:
+        db_table = 'store_selleractivity'
+        ordering = ['-created_at']

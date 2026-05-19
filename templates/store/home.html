@@ -122,6 +122,49 @@
         <a href="/" class="btn btn-primary mt-2">Browse All Products</a>
       </div>
       {% endif %}
+
+      <!-- PAGINATION -->
+      {% if paginator.num_pages > 1 %}
+      <div class="d-flex justify-content-center align-items-center mt-4 mb-2">
+        <nav>
+          <ul class="pagination pagination-md shadow-sm mb-0">
+
+            <!-- Previous -->
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+              <a class="page-link fw-bold"
+                 href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            </li>
+
+            <!-- Page numbers -->
+            {% for num in paginator.page_range %}
+              {% if page_obj.number == num %}
+              <li class="page-item active">
+                <span class="page-link fw-bold" style="background:#2874F0;border-color:#2874F0;">{{ num }}</span>
+              </li>
+              {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ num }}</a>
+              </li>
+              {% endif %}
+            {% endfor %}
+
+            <!-- Next -->
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+              <a class="page-link fw-bold"
+                 href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+
+          </ul>
+        </nav>
+      </div>
+      <p class="text-center text-muted small mt-1">
+        Page {{ page_obj.number }} of {{ paginator.num_pages }} &nbsp;&mdash;&nbsp; {{ paginator.count }} products total
+      </p>
+      {% endif %}
     </div>
   </div>
 </div>

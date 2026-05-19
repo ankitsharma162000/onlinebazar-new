@@ -18,4 +18,18 @@ urlpatterns = [
     path('order-requests/ship/<uuid:req_id>/', views.ship_order_request, name='ship_order_request'),
     path('order-requests/delivered/<uuid:req_id>/', views.mark_delivered, name='mark_delivered'),
     path('profile/', views.seller_profile, name='seller_profile'),
+
+    # Seller Discounts
+    path('discounts/', views.seller_discounts, name='seller_discounts'),
+    path('discounts/add/', views.seller_discount_add, name='seller_discount_add'),
+    path('discounts/toggle/<uuid:discount_id>/', views.seller_discount_toggle, name='seller_discount_toggle'),
+    path('discounts/delete/<uuid:discount_id>/', views.seller_discount_delete, name='seller_discount_delete'),
+
+    # Seller Dynamic Pricing
+    path('dynamic-pricing/', views.seller_dynamic_pricing, name='seller_dynamic_pricing'),
+    path('dynamic-pricing/apply/<uuid:product_id>/', views.seller_apply_price, name='seller_apply_price'),
+
+    # Seller Return Requests
+    path('returns/', views.seller_return_requests, name='seller_return_requests'),
+    path('returns/action/<uuid:return_id>/', views.seller_return_action, name='seller_return_action'),
 ]
