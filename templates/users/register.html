@@ -1,14 +1,69 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
-{% block title %}Register — OnlineBazar{% endblock %}
+{% block title %}Register — OnlineBazar
+<script>
+(function () {
+  const pwd = document.getElementById('password');
+  const cpwd = document.getElementById('confirm_password');
+  const msg = document.getElementById('pwd-mismatch-msg');
+
+  function checkMatch() {
+    if (cpwd.value.length === 0) { msg.style.display = 'none'; cpwd.classList.remove('is-invalid','is-valid'); return; }
+    if (pwd.value !== cpwd.value) {
+      msg.style.display = 'block';
+      cpwd.classList.add('is-invalid'); cpwd.classList.remove('is-valid');
+    } else {
+      msg.style.display = 'none';
+      cpwd.classList.remove('is-invalid'); cpwd.classList.add('is-valid');
+    }
+  }
+  cpwd.addEventListener('input', checkMatch);
+  pwd.addEventListener('input', checkMatch);
+
+  // Prevent form submit if passwords mismatch
+  cpwd.closest('form').addEventListener('submit', function(e) {
+    if (pwd.value !== cpwd.value) {
+      e.preventDefault();
+      msg.style.display = 'block';
+      cpwd.classList.add('is-invalid');
+      cpwd.focus();
+      // Show a toast/alert popup
+      showMismatchAlert();
+    }
+  });
+
+  function showMismatchAlert() {
+    let existing = document.getElementById('pwd-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'pwd-toast';
+    toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#dc3545;color:#fff;padding:14px 28px;border-radius:8px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.25);font-size:1rem;';
+    toast.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Passwords do not match! Please re-enter.';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+})();
+</script>
+{% endblock %}
 {% block content %}
 <div class="container mt-4 mb-5">
   <div class="row justify-content-center">
     <div class="col-md-8">
+
+      <!-- Role Picker -->
+      <div class="d-flex gap-2 justify-content-center mb-4">
+        <a href="/user/register/" class="btn btn-primary fw-bold px-4">
+          <i class="fas fa-user me-2"></i>Buyer
+        </a>
+        <a href="/seller/register/" class="btn btn-outline-success fw-bold px-4">
+          <i class="fas fa-store me-2"></i>Seller
+        </a>
+      </div>
+
       <div class="card shadow-lg">
         <div class="card-header bg-primary text-white text-center py-3">
           <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create Buyer Account</h4>
-          <small>E-Commerce | MCA Project — Ankit Sharma (34) & Niraj Kumar (8)</small>
+          <small>OnlineBazar — MCA Project | Ankit Sharma (34) & Niraj Kumar (8)</small>
         </div>
         <div class="card-body p-4">
           <form method="POST">
@@ -37,11 +92,12 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Password *</label>
-                <input type="password" name="password" class="form-control" minlength="6" required/>
+                <input type="password" name="password" id="password" class="form-control" minlength="6" required/>
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Confirm Password *</label>
-                <input type="password" name="confirm_password" class="form-control" minlength="6" required/>
+                <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="6" required/>
+              <div id="pwd-mismatch-msg" class="text-danger small mt-1" style="display:none;"><i class="fas fa-exclamation-circle me-1"></i>Passwords do not match!</div>
               </div>
               <!-- Address Section -->
               <div class="col-12"><hr/><h5 class="fw-bold text-primary"><i class="fas fa-map-marker-alt me-2"></i>Address Details</h5></div>
@@ -78,4 +134,48 @@
     </div>
   </div>
 </div>
+
+<script>
+(function () {
+  const pwd = document.getElementById('password');
+  const cpwd = document.getElementById('confirm_password');
+  const msg = document.getElementById('pwd-mismatch-msg');
+
+  function checkMatch() {
+    if (cpwd.value.length === 0) { msg.style.display = 'none'; cpwd.classList.remove('is-invalid','is-valid'); return; }
+    if (pwd.value !== cpwd.value) {
+      msg.style.display = 'block';
+      cpwd.classList.add('is-invalid'); cpwd.classList.remove('is-valid');
+    } else {
+      msg.style.display = 'none';
+      cpwd.classList.remove('is-invalid'); cpwd.classList.add('is-valid');
+    }
+  }
+  cpwd.addEventListener('input', checkMatch);
+  pwd.addEventListener('input', checkMatch);
+
+  // Prevent form submit if passwords mismatch
+  cpwd.closest('form').addEventListener('submit', function(e) {
+    if (pwd.value !== cpwd.value) {
+      e.preventDefault();
+      msg.style.display = 'block';
+      cpwd.classList.add('is-invalid');
+      cpwd.focus();
+      // Show a toast/alert popup
+      showMismatchAlert();
+    }
+  });
+
+  function showMismatchAlert() {
+    let existing = document.getElementById('pwd-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'pwd-toast';
+    toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#dc3545;color:#fff;padding:14px 28px;border-radius:8px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.25);font-size:1rem;';
+    toast.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Passwords do not match! Please re-enter.';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+})();
+</script>
 {% endblock %}

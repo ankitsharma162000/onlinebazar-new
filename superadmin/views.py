@@ -105,9 +105,25 @@ def manage_users(request):
 def toggle_user(request, user_id):
     if not _sa_check(request): return redirect('superadmin_login')
     user = get_object_or_404(UserProfile, user_id=user_id)
-    user.is_active = not user.is_active; user.save()
-    action = 'activated' if user.is_active else 'deactivated'
-    messages.success(request, f'User "{user.name}" has been {action}.')
+    if user.is_active:
+        # Suspending — reason required via POST
+        if request.method == 'POST':
+            reason = request.POST.get('reason', '').strip()
+            if not reason:
+                messages.error(request, 'Please provide a suspension reason.')
+                return redirect('manage_users')
+            user.is_active = False
+            user.suspension_reason = reason
+            user.save()
+            messages.success(request, f'User "{user.name}" has been suspended.')
+        else:
+            messages.error(request, 'Invalid request.')
+    else:
+        # Re-activating
+        user.is_active = True
+        user.suspension_reason = None
+        user.save()
+        messages.success(request, f'User "{user.name}" has been activated.')
     return redirect('manage_users')
 
 

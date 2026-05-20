@@ -18,10 +18,19 @@ def seller_register(request):
     if request.session.get('seller_id'): return redirect('seller_dashboard')
     if request.method == 'POST':
         d = request.POST; errors = []
-        if not re.match(r'^\d{10}$', d.get('phone_number','')): errors.append('Phone must be 10 digits.')
+        email = d.get('email', '').lower().strip()
+        phone = d.get('phone_number', '').strip()
+        if not re.match(r'^\d{10}$', phone): errors.append('Phone must be 10 digits.')
         if not re.match(r'^\d{6}$', d.get('pincode','')): errors.append('Pincode must be 6 digits.')
         if d.get('password') != d.get('confirm_password'): errors.append('Passwords do not match.')
-        if Seller.objects.filter(email=d.get('email','').lower()).exists(): errors.append('Email already registered.')
+        # Check email across both seller and buyer tables
+        from users.models import UserProfile
+        if Seller.objects.filter(email=email).exists() or UserProfile.objects.filter(email=email).exists():
+            errors.append('This email address is already registered. Please use a different email.')
+        # Check phone across both seller and buyer tables
+        if re.match(r'^\d{10}$', phone):
+            if Seller.objects.filter(phone_number=phone).exists() or UserProfile.objects.filter(phone_number=phone).exists():
+                errors.append('This phone number is already registered. Please use a different phone number.')
         if errors:
             for e in errors: messages.error(request, e)
             return render(request, 'seller/register.html', {'data': d})
@@ -42,10 +51,19 @@ def seller_login(request):
         email = request.POST.get('email','').lower().strip()
         pw    = request.POST.get('password','')
         try:
-            seller = Seller.objects.get(email=email, is_active=True)
+            seller = Seller.objects.get(email=email)
+            if not seller.is_active:
+                return render(request, 'seller/login.html', {
+                    'suspended': True,
+                    'suspension_reason': seller.blacklist_reason or 'No reason provided.',
+                    'admin_email': 'admin@ecommerce.com',
+                })
             if seller.is_blacklisted:
-                messages.error(request, f'Account suspended. Reason: {seller.blacklist_reason or "Contact SuperAdmin."}')
-                return render(request, 'seller/login.html')
+                return render(request, 'seller/login.html', {
+                    'suspended': True,
+                    'suspension_reason': seller.blacklist_reason or 'No reason provided.',
+                    'admin_email': 'admin@ecommerce.com',
+                })
             if check_password(pw, seller.password):
                 request.session['seller_id']   = str(seller.seller_id)
                 request.session['seller_name'] = seller.name

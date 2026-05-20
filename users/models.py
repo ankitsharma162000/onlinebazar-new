@@ -17,8 +17,9 @@ class UserProfile(models.Model):
     district     = models.CharField(max_length=100)
     state        = models.CharField(max_length=100)
     pincode      = models.CharField(max_length=6)
-    is_active    = models.BooleanField(default=True)
-    created_at   = models.DateTimeField(auto_now_add=True)
+    is_active         = models.BooleanField(default=True)
+    suspension_reason = models.TextField(blank=True, null=True)
+    created_at        = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} ({self.email})"

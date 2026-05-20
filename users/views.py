@@ -14,7 +14,9 @@ def user_register(request):
     if request.method == 'POST':
         d = request.POST
         errors = []
-        if not re.match(r'^\d{10}$', d.get('phone_number', '')):
+        email = d.get('email', '').lower().strip()
+        phone = d.get('phone_number', '').strip()
+        if not re.match(r'^\d{10}$', phone):
             errors.append('Phone number must be exactly 10 digits.')
         if not re.match(r'^\d{6}$', d.get('pincode', '')):
             errors.append('Pincode must be exactly 6 digits.')
@@ -22,8 +24,14 @@ def user_register(request):
             errors.append('Passwords do not match.')
         if len(d.get('password', '')) < 6:
             errors.append('Password must be at least 6 characters.')
-        if UserProfile.objects.filter(email=d.get('email', '').lower()).exists():
-            errors.append('An account with this email already exists.')
+        # Check email across both buyer and seller tables
+        from seller.models import Seller
+        if UserProfile.objects.filter(email=email).exists() or Seller.objects.filter(email=email).exists():
+            errors.append('This email address is already registered. Please use a different email.')
+        # Check phone across both buyer and seller tables
+        if re.match(r'^\d{10}$', phone):
+            if UserProfile.objects.filter(phone_number=phone).exists() or Seller.objects.filter(phone_number=phone).exists():
+                errors.append('This phone number is already registered. Please use a different phone number.')
         if errors:
             for e in errors: messages.error(request, e)
             return render(request, 'users/register.html', {'data': d})
@@ -52,7 +60,13 @@ def user_login(request):
         email    = request.POST.get('email', '').lower().strip()
         password = request.POST.get('password', '')
         try:
-            user = UserProfile.objects.get(email=email, is_active=True)
+            user = UserProfile.objects.get(email=email)
+            if not user.is_active:
+                return render(request, 'users/login.html', {
+                    'suspended': True,
+                    'suspension_reason': user.suspension_reason or 'No reason provided.',
+                    'admin_email': 'admin@ecommerce.com',
+                })
             if check_password(password, user.password):
                 request.session['user_id']   = str(user.user_id)
                 request.session['user_name'] = user.name
@@ -202,7 +216,7 @@ def otp_login_request(request):
             messages.error(request, 'Enter a valid 10-digit mobile number.')
             return render(request, 'users/otp_login.html', {'step': 'phone'})
         try:
-            user = UserProfile.objects.get(phone_number=phone, is_active=True)
+            user = UserProfile.objects.get(phone_number=phone)
         except UserProfile.DoesNotExist:
             messages.error(request, 'No account found with this mobile number.')
             return render(request, 'users/otp_login.html', {'step': 'phone'})
@@ -235,7 +249,15 @@ def otp_login_verify(request):
             if record.is_valid():
                 record.is_used = True
                 record.save()
-                user = UserProfile.objects.get(phone_number=phone, is_active=True)
+                user = UserProfile.objects.get(phone_number=phone)
+                if not user.is_active:
+                    del request.session['otp_phone']
+                    return render(request, 'users/otp_login.html', {
+                        'step': 'phone',
+                        'suspended': True,
+                        'suspension_reason': user.suspension_reason or 'No reason provided.',
+                        'admin_email': 'admin@ecommerce.com',
+                    })
                 request.session['user_id']   = str(user.user_id)
                 request.session['user_name'] = user.name
                 request.session['role']      = 'user'

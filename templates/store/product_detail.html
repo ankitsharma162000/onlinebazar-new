@@ -44,6 +44,7 @@
         <tr><td class="text-muted pe-3">Mfg. Date</td><td>{{ product.manufacturing_date }}</td></tr>
         {% if product.expiry_date %}<tr><td class="text-muted pe-3">Expiry</td><td>{{ product.expiry_date }}</td></tr>{% endif %}
       </table>
+      {% if not request.session.seller_id %}
       <div class="d-flex gap-2 mt-3 flex-wrap">
         {% if product.stock_quantity > 0 %}
         <a href="/cart/add/{{ product.product_id }}/" class="btn btn-primary btn-lg"><i class="fas fa-cart-plus me-2"></i>Add to Cart</a>
@@ -64,9 +65,10 @@
         </button>
         {% endif %}
       </div>
+      {% endif %}
 
       <!-- Price Alert Modal -->
-      {% if user %}
+      {% if user and not request.session.seller_id %}
       <div class="modal fade" id="priceAlertModal" tabindex="-1">
         <div class="modal-dialog modal-sm">
           <div class="modal-content">
@@ -114,7 +116,7 @@
   <div class="row mt-5">
     <div class="col-md-8">
       <h4 class="fw-bold mb-3"><i class="fas fa-star text-warning me-2"></i>Customer Reviews</h4>
-      {% if not user_review and user %}
+      {% if not user_review and user and not request.session.seller_id %}
       <div class="card mb-4 border-primary">
         <div class="card-header bg-primary text-white fw-bold">Write a Review</div>
         <div class="card-body">
@@ -138,7 +140,7 @@
           </form>
         </div>
       </div>
-      {% elif not user %}
+      {% elif not user and not request.session.seller_id %}
       <div class="alert alert-info"><a href="/user/login/">Login</a> to write a review.</div>
       {% endif %}
       {% for review in reviews %}

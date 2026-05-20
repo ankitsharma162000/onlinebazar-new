@@ -64,8 +64,39 @@
           <li class="nav-item"><a class="nav-link" href="/superadmin/dashboard/"><i class="fas fa-crown me-1"></i>Admin Panel</a></li>
           <li class="nav-item"><a class="nav-link text-warning" href="/superadmin/logout/"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         {% else %}
-          <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="/user/login/">Login</a></li>
-          <li class="nav-item"><a class="btn btn-warning btn-sm fw-bold" href="/user/register/">Register</a></li>
+          <!-- Login Dropdown -->
+          <li class="nav-item dropdown">
+            <a class="btn btn-outline-light btn-sm dropdown-toggle" href="#" data-bs-toggle="dropdown">
+              <i class="fas fa-sign-in-alt me-1"></i>Login
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              <li><h6 class="dropdown-header text-muted">Login as...</h6></li>
+              <li><a class="dropdown-item" href="/user/login/">
+                <i class="fas fa-user me-2 text-primary"></i>Buyer
+              </a></li>
+              <li><a class="dropdown-item" href="/seller/login/">
+                <i class="fas fa-store me-2 text-success"></i>Seller
+              </a></li>
+              <li><a class="dropdown-item" href="/superadmin/login/">
+                <i class="fas fa-crown me-2 text-warning"></i>SuperAdmin
+              </a></li>
+            </ul>
+          </li>
+          <!-- Register Dropdown -->
+          <li class="nav-item dropdown">
+            <a class="btn btn-warning btn-sm fw-bold dropdown-toggle" href="#" data-bs-toggle="dropdown">
+              <i class="fas fa-user-plus me-1"></i>Register
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              <li><h6 class="dropdown-header text-muted">Register as...</h6></li>
+              <li><a class="dropdown-item" href="/user/register/">
+                <i class="fas fa-user me-2 text-primary"></i>Buyer
+              </a></li>
+              <li><a class="dropdown-item" href="/seller/register/">
+                <i class="fas fa-store me-2 text-success"></i>Seller
+              </a></li>
+            </ul>
+          </li>
         {% endif %}
       </ul>
     </div>
@@ -101,7 +132,7 @@
                     border:3px solid #FB641B;box-shadow:0 4px 15px rgba(251,100,27,0.4);">
         <div>
           <div class="fw-bold text-warning" style="font-size:15px;">Ankit Sharma</div>
-          
+        
           <div class="text-info small mt-1 fw-semibold">Founders</div>
         </div>
       </div>
@@ -112,7 +143,7 @@
         <p class="text-muted small mb-1"></p>
         <p class="text-muted small mb-0"></p>
         <hr class="border-secondary mx-auto mt-2" style="width:80%;"/>
-        <p class="text-muted small mt-1"></p>
+        
       </div>
 
       <!-- RIGHT: Supervisor -->
@@ -123,7 +154,7 @@
         <div class="text-muted small"></div>
       </div>
 
-    </div>
+    </div
   </div>
 </footer>
 

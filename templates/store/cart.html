@@ -1,5 +1,35 @@
 {% extends 'base.html' %}
-{% block title %}My Cart — OnlineBazar{% endblock %}
+{% block title %}My Cart — OnlineBazar
+<!-- Remove Confirmation Modal -->
+<div class="modal fade" id="removeConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h6 class="modal-title"><i class="fas fa-trash me-2"></i>Remove Item?</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="mb-1">Remove <strong id="removeItemName"></strong> from your cart?</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep it</button>
+        <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  var _pendingRemoveForm = null;
+  function confirmRemove(formId, itemName) {
+    _pendingRemoveForm = document.getElementById(formId);
+    document.getElementById('removeItemName').textContent = itemName;
+    new bootstrap.Modal(document.getElementById('removeConfirmModal')).show();
+  }
+  document.getElementById('confirmRemoveBtn').addEventListener('click', function() {
+    if (_pendingRemoveForm) _pendingRemoveForm.submit();
+  });
+</script>
+{% endblock %}
 {% block content %}
 <div class="container mt-4">
   <h3 class="fw-bold mb-4"><i class="fas fa-shopping-cart text-primary me-2"></i>My Cart</h3>
@@ -24,10 +54,18 @@
             </div>
             <div class="col-3">
               <div class="d-flex align-items-center gap-1">
+                {% if item.quantity == 1 %}
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                  onclick="confirmRemove('removeForm_{{ item.id }}', '{{ item.product.product_name|escapejs }}')">−</button>
+                <form id="removeForm_{{ item.id }}" method="POST" action="/cart/update/{{ item.id }}/" style="display:none;">
+                  {% csrf_token %}<input type="hidden" name="action" value="remove"/>
+                </form>
+                {% else %}
                 <form method="POST" action="/cart/update/{{ item.id }}/">{% csrf_token %}
                   <input type="hidden" name="action" value="decrease"/>
                   <button class="btn btn-outline-secondary btn-sm">−</button>
                 </form>
+                {% endif %}
                 <span class="fw-bold px-2">{{ item.quantity }}</span>
                 <form method="POST" action="/cart/update/{{ item.id }}/">{% csrf_token %}
                   <input type="hidden" name="action" value="increase"/>
@@ -84,4 +122,34 @@
   </div>
   {% endif %}
 </div>
+
+<!-- Remove Confirmation Modal -->
+<div class="modal fade" id="removeConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h6 class="modal-title"><i class="fas fa-trash me-2"></i>Remove Item?</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="mb-1">Remove <strong id="removeItemName"></strong> from your cart?</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep it</button>
+        <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  var _pendingRemoveForm = null;
+  function confirmRemove(formId, itemName) {
+    _pendingRemoveForm = document.getElementById(formId);
+    document.getElementById('removeItemName').textContent = itemName;
+    new bootstrap.Modal(document.getElementById('removeConfirmModal')).show();
+  }
+  document.getElementById('confirmRemoveBtn').addEventListener('click', function() {
+    if (_pendingRemoveForm) _pendingRemoveForm.submit();
+  });
+</script>
 {% endblock %}
